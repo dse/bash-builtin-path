@@ -1,0 +1,4 @@
+build/*.dll
+build/*.so
+build/*.dylib
+build/*.o
