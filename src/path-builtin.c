@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "path-builtin.h"
 
@@ -156,12 +157,40 @@ void path_list(char* path) {
  * Always returns a newly allocated string.
  */
 char* path_prepend(char* path, char* dir) {
+    size_t dir_len = strlen(dir);
+    if (path_force) {
+        path = path_delete(path, dir); /* new allocation */
+    } else {
+        path = strdup(path);    /* new allocation */
+        if (path_check(path, dir)) {
+            return path;
+        }
+    }
+    size_t path_len = strlen(path);
+    path = realloc(path, path_len + dir_len + 2);
+    memmove(path + dir_len + 1, path, path_len + 1);
+    strcpy(path, dir);
+    path[dir_len] = ':';
+    return path;
 }
 
 /**
  * Always returns a newly allocated string.
  */
 char* path_append(char* path, char* dir) {
+    if (path_force) {
+        path = path_delete(path, dir); /* new allocation */
+    } else {
+        path = strdup(path);    /* new allocation */
+        if (path_check(path, dir)) {
+            return path;
+        }
+    }
+    size_t path_len = strlen(path);
+    path = realloc(path, path_len + dir_len + 2);
+    path[path_len] = ':';
+    strcpy(path + path_len + 1, dir);
+    return path;
 }
 
 /**
@@ -206,7 +235,7 @@ char* path_check(char* path, char* dir) {
 }
 
 /**
- * Always returns a newly allocated string, or NULL.
+ * Always returns a newly allocated string.
  */
 char* path_delete(char* path, char* dir) {
     char* occurrence;
