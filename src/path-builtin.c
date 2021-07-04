@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "path-builtin.h"
 
@@ -208,6 +209,26 @@ char* path_check(char* path, char* dir) {
  * Always returns a newly allocated string, or NULL.
  */
 char* path_delete(char* path, char* dir) {
+    char* occurrence;
+    size_t len = strlen(dir);
+    path = strdup(path);
+    while ((occurrence = path_check(path, dir)) != NULL) {
+        char* end = occurrence + len;
+        if (occurrence == path) {
+            if (*end == ':') {
+                memmove(occurrence, end + 1, strlen(end + 1) + 1); /* 'A:b:c' => 'b:c' */
+            } else {
+                *occurrence = '\0'; /* 'A' => '' */
+            }
+        } else {
+            if (*end == ':') {
+                memmove(occurrence, end + 1, strlen(end + 1) + 1); /* 'x:y:z:A:b:c' => 'x:y:z:b:c' */
+            } else {
+                *(occurrence - 1) = '\0'; /* 'x:y:z:A' => 'x:y:z' */
+            }
+        }
+    }
+    return path;
 }
 
 SHELL_VAR* find_regular_variable(char* varname) {
