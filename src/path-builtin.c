@@ -176,29 +176,31 @@ char* path_check(char* path, char* dir) {
             return NULL;
         }
         if (occurrence != path && *(occurrence - 1) != ':') {
-            ptr = strchr(occurrence + len, ':');
+            /* neither anchored to beginning of string nor preceded by ':' */
+            ptr = strchr(occurrence + len, ':'); /* find ':' before next path element */
             if (!ptr) {
-                return NULL;
+                return NULL;    /* there isn't a next one */
             }
-            ptr += 1;
+            ptr += 1; /* skip ':' to go to start of next path element */
             if (!*ptr) {
-                return NULL;
+                return NULL;    /* at end of string */
             }
-            continue;
+            continue;           /* there's a next path element; continue search from it */
         }
-        ptr = occurrence + len;
+        ptr = occurrence + len; /* end of occurrence */
         if (*ptr && *ptr != ':') {
-            ptr = strchr(ptr, ':');
+            /* neither anchored to end of string nor followedy by ':' */
+            ptr = strchr(ptr, ':'); /* find ':' before next path element */
             if (!ptr) {
-                return NULL;
+                return NULL;    /* there isn't a next one */
             }
-            ptr += 1;
+            ptr += 1; /* skip ':' to go to start of next path element */
             if (!*ptr) {
-                return NULL;
+                return NULL;    /* at end of string */
             }
-            continue;
+            continue;           /* there's a next path element; continue search from it */
         }
-        return occurrence;
+        return occurrence;      /* found a match */
     }
 }
 
