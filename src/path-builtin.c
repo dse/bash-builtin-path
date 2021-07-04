@@ -92,7 +92,6 @@ int path_builtin_stage2(char* varname, WORD_LIST* list) {
             retval = EXECUTION_FAILURE;
         }
     }
-    fprintf(stderr, retval == EXECUTION_SUCCESS ? ":-)\n" : ":-(\n");
     return retval;
 }
 
@@ -110,28 +109,7 @@ int path_list_var(char* varname) {
 /**
  * Always returns 1 or 0, to indicate success or failure.
  */
-int path_prepend_var(char* varname, char* dir) {
-    SHELL_VAR* var = find_regular_writable_variable(varname);
-    if (!var) {
-        return 0;
-    }
-}
-
-/**
- * Always returns 1 or 0, to indicate success or failure.
- */
-int path_append_var(char* varname, char* dir) {
-    SHELL_VAR* var = find_regular_writable_variable(varname);
-    if (!var) {
-        return 0;
-    }
-}
-
-/**
- * Always returns 1 or 0, to indicate success or failure.
- */
 int path_check_var(char* varname, char* dir) {
-    fprintf(stderr, "path_check_var(%s, %s)\n", varname, dir);
     char* value = find_regular_variable_value(varname);
     if (!value) {
         return 0;
@@ -143,11 +121,19 @@ int path_check_var(char* varname, char* dir) {
 /**
  * Always returns 1 or 0, to indicate success or failure.
  */
+int path_prepend_var(char* varname, char* dir) {
+}
+
+/**
+ * Always returns 1 or 0, to indicate success or failure.
+ */
+int path_append_var(char* varname, char* dir) {
+}
+
+/**
+ * Always returns 1 or 0, to indicate success or failure.
+ */
 int path_delete_var(char* varname, char* dir) {
-    SHELL_VAR* var = find_regular_writable_variable(varname);
-    if (!var) {
-        return 0;
-    }
 }
 
 void path_list(char* path) {
@@ -181,7 +167,6 @@ char* path_append(char* path, char* dir) {
  * Always returns the first occurrence, or NULL.
  */
 char* path_check(char* path, char* dir) {
-    fprintf(stderr, "path_check(%s, %s)\n", path, dir);
     char* occurrence;
     char* ptr = path;
     size_t len = strlen(dir);
