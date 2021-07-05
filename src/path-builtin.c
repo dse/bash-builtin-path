@@ -167,7 +167,7 @@ char* path_prepend(char* path, char* dir) {
         }
     }
     size_t path_len = strlen(path);
-    path = realloc(path, path_len + dir_len + 2);
+    path = realloc(path, path_len + dir_len + 2); /* dir + ':' + path + '\0' */
     memmove(path + dir_len + 1, path, path_len + 1);
     strcpy(path, dir);
     path[dir_len] = ':';
@@ -187,7 +187,7 @@ char* path_append(char* path, char* dir) {
         }
     }
     size_t path_len = strlen(path);
-    path = realloc(path, path_len + dir_len + 2);
+    path = realloc(path, path_len + dir_len + 2); /* path + ':' + dir + '\0' */
     path[path_len] = ':';
     strcpy(path + path_len + 1, dir);
     return path;
