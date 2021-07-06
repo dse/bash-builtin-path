@@ -139,6 +139,9 @@ int path_delete_var(char* varname, char* dir) {
 }
 
 void path_list(char* path) {
+    if (path == NULL || !*path) {
+        return;
+    }
     char* colon_ptr;
     while (*path) {
         colon_ptr = strchr(path, ':');
@@ -157,6 +160,9 @@ void path_list(char* path) {
  * Always returns a newly allocated string.
  */
 char* path_prepend(char* path, char* dir) {
+    if (path == NULL || !*path) {
+        return strdup(dir);
+    }
     size_t dir_len = strlen(dir);
     if (path_force) {
         path = path_delete(path, dir); /* new allocation */
@@ -178,6 +184,9 @@ char* path_prepend(char* path, char* dir) {
  * Always returns a newly allocated string.
  */
 char* path_append(char* path, char* dir) {
+    if (path == NULL || !*path) {
+        return strdup(dir);
+    }
     if (path_force) {
         path = path_delete(path, dir); /* new allocation */
     } else {
@@ -197,6 +206,9 @@ char* path_append(char* path, char* dir) {
  * Always returns the first occurrence, or NULL.
  */
 char* path_check(char* path, char* dir) {
+    if (path == NULL || !*path) {
+        return NULL;
+    }
     char* occurrence;
     char* ptr = path;
     size_t len = strlen(dir);
@@ -235,9 +247,13 @@ char* path_check(char* path, char* dir) {
 }
 
 /**
- * Always returns a newly allocated string.
+ * Always returns a newly allocated string, or NULL if resultant path
+ * is empty.
  */
 char* path_delete(char* path, char* dir) {
+    if (path == NULL || !*path) {
+        return NULL;
+    }
     char* occurrence;
     size_t len = strlen(dir);
     path = strdup(path);
@@ -247,7 +263,10 @@ char* path_delete(char* path, char* dir) {
             if (*end == ':') {
                 memmove(occurrence, end + 1, strlen(end + 1) + 1); /* 'A:b:c' => 'b:c' */
             } else {
-                *occurrence = '\0'; /* 'A' => '' */
+                /* strictly speaking, removing the only element from a path is impossible. */
+                /* the empty string has one element and an unset variable also has one element. */
+                free(path);
+                return NULL;
             }
         } else {
             if (*end == ':') {
@@ -258,6 +277,148 @@ char* path_delete(char* path, char* dir) {
         }
     }
     return path;
+}
+
+/**
+ * Returns a newly allocated string or NULL.
+ */
+char* path_cleanup(char* path) {
+    if (!path || !*path) {
+        return NULL;
+    }
+    path = strdup(path);        /* memory allocation performed here */
+    int count = path_element_count(path);
+    if (count <= 1) {
+        /* duplicates are not possible for paths having < 2 elements */
+        return path;
+    }
+
+    char** path_elements = path_element_array(path);
+    int* flags = path_element_duplicate_flags(path, path_elements, count);
+    if (!flags) {
+        return path;
+    }
+
+    /* NOTE: element 0 will never have flag set; first element is never a duplicate */
+    /*                      vvvvv                                                   */
+    for (int i = count - 1; i > 0; i -= 1) {
+        if (!flags[i]) {
+            continue;
+        }
+        char* element = path_elements[i];
+        char* end = strchr(element, ':');
+        if (end == NULL) {        /* is last path element */
+            if (element > path) { /* is not first path element */
+                /* x:x:DUP */
+                /*     --- */
+                if (*(element - 1) == ':') {
+                    *(element - 1) = '\0';
+                } else {
+                    /* we should never get to this point */
+                }
+            } else {
+                /* we should never get to this point */
+                *path = '\0';
+            }
+        } else {
+            if (element > path) {
+                if (*(end + 1) != '\0') {
+                    /* x:x:DUP:x:x */
+                    /*     ----    */
+                    memmove(element, end + 1, 1 + strlen(end + 1));
+                } else {
+                    /* x:x:DUP: */
+                    /*     ---- */
+                    *element = '\0';
+                }
+            } else {
+                /* we should never get to this point */
+            }
+        }
+    }
+
+    return path;
+}
+
+/**
+ * Return the number of ':'-separated elements in the path.
+ * An empty path is considered to have one element.
+ * ":/usr/local/bin" is considered to have two elements.
+ * "/usr/local/bin:" is considered to have two elements.
+ * "/usr/bin::/bin" is considered to have three elements.
+ */
+int path_element_count(char* path) {
+    if (path == NULL || !*path) {
+        return 1;
+    }
+    int count = 1;
+    for (; *path; path += 1) {
+        if (*path == ':') {
+            count += 1;
+        }
+    }
+    return count;
+}
+
+/**
+ * returns a newly allocated array or NULL
+ */
+char** path_element_array(char* path) {
+    if (path == NULL || !*path) {
+        return NULL;
+    }
+    int count = path_element_count(path);
+    char** path_elements = (char**)malloc(sizeof(char*) * count);
+    path_elements[0] = path;
+    for (int index = 1; *path; path += 1) {
+        if (*path == ':') {
+            path_elements[index] = path + 1;
+            index += 1;
+        }
+    }
+    return path_elements;
+}
+
+/**
+ * Detects duplicate elements in the PATH.
+ * Returns a newly allocated integer array containing ones and zeroes.
+ * If there are no duplicates, returns NULL.
+ * If path is empty or contains fewer than two elements, returns NULL.
+ */
+int* path_element_duplicate_flags(char* path, char** path_elements, int count) {
+    if (!path || !*path || !path_elements || count <= 1) {
+        return NULL;
+    }
+    int* flags = (int*)malloc(sizeof(int) * count);
+    for (int i = 0; i < count; i += 1) {
+        flags[i] = 0;
+    }
+    int has_flags = 0;
+    for (int i = 0; i < (count - 1); i += 1) {
+        char* path_i = path_elements[i];
+        char* end_i  = strchr(path_i, ':');
+        if (end_i != NULL) {
+            *end_i = '\0';
+        }
+        for (int j = 1; j < count; j += 1) {
+            char* path_j = path_elements[j];
+            char* end_j  = strchr(path_j, ':');
+            if (end_j != NULL) { *end_j = '\0'; }
+            if (!strcmp(path_i, path_j)) {
+                flags[j] = 1;
+                has_flags = 1;
+            }
+            if (end_j != NULL) { *end_j = ':'; }
+        }
+        if (end_i != NULL) {
+            *end_i = ':';
+        }
+    }
+    if (has_flags) {
+        return flags;
+    }
+    free(flags);
+    return NULL;
 }
 
 SHELL_VAR* find_regular_variable(char* varname) {
