@@ -38,5 +38,9 @@ SHELL_VAR* find_regular_variable(char*);
 SHELL_VAR* find_regular_writable_variable(char*);
 char* find_regular_variable_value(char*);
 
+char* path_cleanup(char*);
+int path_element_count(char*);
+char** path_element_array(char* path);
+int* path_element_duplicate_flags(char*, char**, int);
 
 #endif
