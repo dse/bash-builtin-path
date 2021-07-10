@@ -161,6 +161,7 @@ void path_list(char* path) {
  */
 char* path_prepend(char* path, char* dir) {
     if (path == NULL || !*path) {
+        /* technically should return a pointer to "<dir>:" */
         return strdup(dir);
     }
     size_t dir_len = strlen(dir);
@@ -185,6 +186,7 @@ char* path_prepend(char* path, char* dir) {
  */
 char* path_append(char* path, char* dir) {
     if (path == NULL || !*path) {
+        /* technically should return a pointer to ":<dir>" */
         return strdup(dir);
     }
     if (path_force) {
@@ -203,7 +205,8 @@ char* path_append(char* path, char* dir) {
 }
 
 /**
- * Always returns the first occurrence, or NULL.
+ * Always returns the first occurrence of the supplied dir in the
+ * supplied path, or NULL.
  */
 char* path_check(char* path, char* dir) {
     if (path == NULL || !*path) {
@@ -262,6 +265,8 @@ char* path_delete(char* path, char* dir) {
         if (occurrence == path) {
             if (*end == ':') {
                 memmove(occurrence, end + 1, strlen(end + 1) + 1); /* 'A:b:c' => 'b:c' */
+            } else if (*end) {
+                /* should never be the case */
             } else {
                 /* strictly speaking, removing the only element from a path is impossible. */
                 /* the empty string has one element and an unset variable also has one element. */
@@ -271,6 +276,8 @@ char* path_delete(char* path, char* dir) {
         } else {
             if (*end == ':') {
                 memmove(occurrence, end + 1, strlen(end + 1) + 1); /* 'x:y:z:A:b:c' => 'x:y:z:b:c' */
+            } else if (*end) {
+                /* should never be the case */
             } else {
                 *(occurrence - 1) = '\0'; /* 'x:y:z:A' => 'x:y:z' */
             }
