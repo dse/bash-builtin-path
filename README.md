@@ -37,6 +37,8 @@ To remove a directory:
 
 -   https://github.com/bminor/bash/tree/master/examples/loadables
 -   https://stackoverflow.com/questions/37360273/how-to-embed-a-command-into-bash-which-act-as-built-in
+-   https://blog.dario-hamidi.de/a/build-a-bash-builtin
+-   https://github.com/dhamidi/bash-plugin-hello
 
 ## Why?
 
