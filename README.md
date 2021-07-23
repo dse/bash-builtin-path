@@ -47,4 +47,4 @@ of slow, and I needed a hobby.
 
 Yes, I'm fully aware that Bash scripting is the worst possible hobby.
 
-I'm not switching to `zsh` or whatever.
+I'm sticking with Bash anyway.  I'm not switching to `zsh` or whatever.
